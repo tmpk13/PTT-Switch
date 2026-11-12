@@ -13,24 +13,62 @@
   References were renumbered for this board (CH572D is U1).
 - Kept, with the reasons it was built that way:
   - Single 3.3 V supply mode: V5 tied to VDD33, 2.2 uF + 100 nF at VDD33
-    (datasheet power-pin requirement). U2 (AP2112K-3.3) makes +3V3 from
-    VBUS.
+    (datasheet power-pin requirement).
   - Y1 has no load capacitors: the CH572 loads its 32 MHz crystal with
     internal tunable capacitors (CL 12 pF for the XRCGB32M000F1S1DR0).
     Its footprint is a corrected one: an earlier board put XI and XO on
     the package's joined NC pads.
-  - JP1 shorted while plugging in USB pulls D+ to 3.3 V through R3: the
-    CH572D starts its ROM bootloader, the way to flash it over USB. Leave
-    it open otherwise.
-  - The USB pair is named `USB_D+`/`USB_D-` so the PCB diff-pair router
-    pairs it.
+- The USB-C port (J1, CC resistors R1/R2, bootloader strap JP1/R3) and its
+  regulator U2 went when the board moved to a battery; see Power and
+  Flashing below.
 - CH572D pin numbers are from datasheet CH572DS1 Table 1-1;
   `tests/test_board.py` holds them and every net of the board.
 - The project's CH572D symbol has PA4, PA5, PA6, PA8 and PA9 at 3.81 mm
   instead of 2.54 mm, as PA10/PA11 already were: they carry no-connect
   flags, and at 2.54 mm the flag's cross lands on the two-digit pin number.
-- ERC: VBUS and GND carry PWR_FLAGs and U2's output drives +3V3, so
-  `power_pin_not_driven` stays at its default (error) and passes.
+- ERC: +3V3 and GND carry PWR_FLAGs, since the cell connector and D3 have
+  passive pins, so `power_pin_not_driven` stays at its default (error) and
+  passes.
+
+## Power
+
+- A 3.6 V Li-SOCl2 primary cell on J1 feeds the CH572D through D3, with
+  no regulator. The chip's own regulator (LDO5V) is no use here: it takes
+  4.5 to 5.3 V on V5. In single-supply mode VDD33 and VIO33 take 2.0 to
+  3.6 V, absolute maximum 4.0 V (Tables 19-1, 19-2), and internal LDOs
+  make the core supplies. The `+3V3` net is that unregulated rail.
+- D3 (BAT54WS Schottky) keeps every current out of the cell: a primary
+  lithium cell must never be charged, and the WCH-LinkE's 3.3 V on J4 or a
+  cell plugged in reversed would otherwise do it. Its drop also keeps a
+  fresh cell (about 3.67 V open circuit) under the 3.6 V operating limit:
+  at most 0.24 V at 0.1 mA and 0.4 V at 10 mA (BAT54 datasheet). Chosen
+  over 1 A Schottkys with lower drop (B5819W and the like) for its lower
+  reverse leakage, which is charge current into a depleted cell while J4
+  powers the board.
+- C1 (100 uF, X5R ceramic, 1206) supplies the radio bursts. Bobbin cells
+  (ER14250, ER14505) have a high internal resistance and a passivation
+  layer that delays their voltage under a sudden load. Ceramic, because
+  tantalum and electrolytic parts may leak microamps (tantalum: up to
+  0.01 CV, 6 uA for 100 uF at 6.3 V), more than the chip's whole sleep
+  current (0.3 to 1.2 uA, chapter 5 power modes). A 6.3 V 1206 part keeps
+  only about half its rated capacitance at 3.6 V DC bias; check the
+  chosen part's bias curve, or use a 10 V part.
+- J1 is a 2-pin JST PH (2.0 mm) horizontal header for a wire-lead cell,
+  which leaves the cell size open (1/2 AA, AA). JST PH polarity is not
+  standard among cell vendors: check + is on pin 1 before plugging in;
+  D3 blocks a reversed cell.
+- End of life: the chip resets below Vlvr (1.5 to 1.9 V); the battery
+  monitor (`R8_BAT_DET_CFG`, thresholds 1.8 to 2.4 V, about 1 uA when
+  enabled) can warn first.
+
+## Flashing
+
+- PA0 and PA1 are the two-wire debug pins SWDIO and SWCLK, enabled after
+  every power-on and reset (Table 1-1, note 3). J4 (1x04, 2.54 mm) brings
+  them out for a WCH-LinkE: 1 +3V3, 2 SWDIO, 3 SWCLK, 4 GND.
+- J4 is the only way into the chip: firmware must leave the debug
+  interface enabled, since disabling it frees PA0/PA1 as GPIO but locks
+  out the programmer.
 
 ## Touch wire
 
@@ -85,7 +123,8 @@ next build overwrites it, so settled values go back into params.toml.
 
 All values in params.toml are placeholders until the board outline, its
 mounting holes and the touch wire layout are final. The cable opening is
-sized for a USB-C plug on J1.
+sized for a USB-C plug, which the board no longer has; the battery and the
+SWD header J4 need room instead.
 
 ### Part primitives and expressions, no sketches
 

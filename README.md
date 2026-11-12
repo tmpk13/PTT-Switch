@@ -2,7 +2,8 @@
 
 A push-to-talk switch: a wire on the board is a capacitive touch electrode,
 and a WCH CH572D (RISC-V, BLE 5) senses it and reports over Bluetooth Low
-Energy. KiCad 10 project in `ptt-switch/`, powered and flashed over USB-C;
+Energy. KiCad 10 project in `ptt-switch/`, powered by a 3.6 V Li-SOCl2
+cell and flashed through an SWD header with a WCH-LinkE;
 `enclosure/` builds a parametric FreeCAD box for it from
 `enclosure/params.toml`.
 

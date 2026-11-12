@@ -4,14 +4,16 @@
 
 ```mermaid
 flowchart LR
-    usb[J1 USB-C]
-    ldo[U2 AP2112K-3.3]
+    cell[J1 Li-SOCl2 cell 3.6 V]
+    d3[D3 BAT54WS]
+    c1[C1 100 uF]
+    swd[J4 SWD header]
     subgraph mcu[U1 CH572D]
         cmp[comparator<br/>CMP_P1 = PA7]
         tmr[timer capture]
         gpio[PA10]
         ble[BLE radio<br/>ANT]
-        usbd[USB device<br/>PA0/PA1]
+        dbg[debug interface<br/>PA0/PA1]
         leds[PA2, PA3]
     end
     y1[Y1 32 MHz]
@@ -21,11 +23,11 @@ flowchart LR
     match[C5, R8, C6 pi-match]
     ant[J3 U.FL]
     d[D1, D2 LEDs]
-    jp1[JP1 ROM boot strap]
 
-    usb -- VBUS --> ldo -- +3V3 --> mcu
-    usb -- USB_D+/USB_D- --> usbd
-    jp1 -- D+ pull-up --> usbd
+    cell -- VBAT --> d3 -- +3V3 --> mcu
+    c1 --- d3
+    swd -- +3V3 --> mcu
+    swd -- SWDIO/SWCLK --> dbg
     y1 --> mcu
     gpio --> r7 --> wire
     wire --> r6 --> cmp --> tmr

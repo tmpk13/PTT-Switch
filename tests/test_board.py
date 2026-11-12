@@ -25,16 +25,14 @@ TABLE_1_1 = {
 
 # Every net of the board as a set of REF.PIN, by function.
 NETS = {
-    "+3V3": {"U2.5", "C2.1", "C3.1", "C4.1", "U1.6", "U1.7", "U1.8", "R3.1", "D1.2", "D2.2"},
-    "GND": {"U1.21", "U2.2", "J1.A1", "J1.A12", "J1.B1", "J1.B12", "J1.SH", "R1.2", "R2.2",
-            "Y1.2", "C1.2", "C2.2", "C3.2", "C4.2", "C5.2", "C6.2", "J3.2"},
-    "VBUS": {"J1.A4", "J1.A9", "J1.B4", "J1.B9", "C1.1", "U2.1", "U2.3"},
-    # USB-C data pair, CC sink resistors, CH572D ROM bootloader strap
-    "USB_D+": {"J1.A6", "J1.B6", "U1.12", "JP1.2"},
-    "USB_D-": {"J1.A7", "J1.B7", "U1.11"},
-    "CC1": {"J1.A5", "R1.1"},
-    "CC2": {"J1.B5", "R2.1"},
-    "BOOT_STRAP": {"R3.2", "JP1.1"},
+    # Li-SOCl2 cell on J1 (+ on pin 1) into the anode (pin 2) of D3; the
+    # cathode (pin 1) feeds the CH572D directly, with C1 for the radio bursts
+    "VBAT": {"J1.1", "D3.2"},
+    "+3V3": {"D3.1", "C1.1", "C3.1", "C4.1", "U1.6", "U1.7", "U1.8", "D1.2", "D2.2", "J4.1"},
+    "GND": {"U1.21", "J1.2", "J4.4", "Y1.2", "C1.2", "C3.2", "C4.2", "C5.2", "C6.2", "J3.2"},
+    # SWD header: PA0 is SWDIO, PA1 is SWCLK
+    "SWDIO": {"J4.2", "U1.11"},
+    "SWCLK": {"J4.3", "U1.12"},
     # 32 MHz crystal, loaded by the CH572's internal capacitors
     "XO": {"U1.2", "Y1.1"},
     "XI": {"U1.3", "Y1.3"},
@@ -51,10 +49,9 @@ NETS = {
     "ANT": {"U1.5", "C5.1", "R8.2"},
     "ANT_FEED": {"R8.1", "C6.1", "J3.1"},
 }
-UNCONNECTED = {"U1.4", "U1.19", "U1.9", "U1.10", "U1.13", "U1.14", "U1.15", "U1.18",
-               "U2.4", "J1.A8", "J1.B8"}
+UNCONNECTED = {"U1.4", "U1.19", "U1.9", "U1.10", "U1.13", "U1.14", "U1.15", "U1.18"}
 # nets the PCB needs by name (net classes, keep-outs)
-NAMED = {"TOUCH", "ANT", "USB_D+", "USB_D-", "+3V3", "GND", "VBUS"}
+NAMED = {"TOUCH", "ANT", "SWDIO", "SWCLK", "+3V3", "GND", "VBAT"}
 
 
 def parse(text):
