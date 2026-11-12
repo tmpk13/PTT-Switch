@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Solarized dark. -->
+    <style name="Theme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/pad</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">@bool/light</item>
+    </style>
+    <color name="bg">#002b36</color>      <!-- base03 -->
+    <color name="pad">#073642</color>     <!-- base02 -->
+    <color name="fg">#93a1a1</color>      <!-- base1 -->
+    <color name="faint">#586e75</color>   <!-- base01 -->
+    <bool name="light">false</bool>
+</resources>

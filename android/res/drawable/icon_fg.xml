@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A touch pad (dot in a ring) on the end of a wire, inside the adaptive icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="108dp" android:height="108dp"
+        android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#fdf6e3"
+          android:pathData="M54,36a10,10 0 1 1 0,20a10,10 0 1 1 0,-20z" />
+    <path android:strokeColor="#fdf6e3" android:strokeWidth="3"
+          android:pathData="M54,29a17,17 0 1 1 0,34a17,17 0 1 1 0,-34z" />
+    <path android:fillColor="#fdf6e3" android:pathData="M52.5,63h3v18h-3z" />
+</vector>

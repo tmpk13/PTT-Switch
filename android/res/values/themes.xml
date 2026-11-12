@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Solarized light. -->
+    <style name="Theme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/pad</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">@bool/light</item>
+    </style>
+    <color name="bg">#fdf6e3</color>      <!-- base3 -->
+    <color name="pad">#eee8d5</color>     <!-- base2 -->
+    <color name="fg">#586e75</color>      <!-- base01 -->
+    <color name="faint">#93a1a1</color>   <!-- base1 -->
+    <color name="touched">#dc322f</color> <!-- red -->
+    <color name="on_touched">#fdf6e3</color>
+    <color name="icon_bg">#268bd2</color> <!-- blue -->
+    <bool name="light">true</bool>
+</resources>
