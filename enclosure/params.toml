@@ -1,0 +1,43 @@
+# Enclosure parameters, all lengths in mm. The build script writes these into
+# the "Params" spreadsheet of enclosure/build/ptt-box.FCStd; box.py lists what
+# each one means. Every value here is a placeholder until the PCB and the
+# touch sensor are final.
+#
+# Axes: X along the PCB length, Y along its width, Z up. The PCB sits
+# centered in the cavity, so the X/Y offsets below are from the PCB center.
+
+[pcb]
+pcb_l = 40.0
+pcb_w = 25.0
+pcb_t = 1.6
+pcb_gap = 0.5
+above_pcb = 6.0
+
+[mounting]
+hole_inset = 3.0
+hole_d = 1.8
+standoff_d = 5.0
+standoff_h = 4.0
+
+[shell]
+wall = 2.0
+floor_t = 2.0
+lid_t = 2.0
+corner_r = 3.0
+
+[lid]
+lip_h = 2.0
+lip_t = 1.2
+fit_gap = 0.2
+
+[touch]
+touch_d = 16.0
+touch_x = 0.0
+touch_y = 0.0
+touch_skin = 1.0
+
+[port]
+port_w = 10.0
+port_h = 4.5
+port_y = 0.0
+port_z = 1.6

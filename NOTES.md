@@ -72,3 +72,86 @@
   is a straight connection, and values go in only if measuring the built
   board with the final antenna and enclosure asks for them.
 - The antenna is J3, a U.FL connector for an external 2.4 GHz antenna.
+
+## Enclosure
+
+### params.toml is the source, the FCStd is generated
+
+`enclosure/build/ptt-box.FCStd` is rebuilt from `enclosure/params.toml` by
+`mise run box:build` and is not committed. Inside it, every feature reads the
+"Params" spreadsheet through expressions, so changing a value there and
+recomputing reshapes the model in the GUI. That is for trying values; the
+next build overwrites it, so settled values go back into params.toml.
+
+All values in params.toml are placeholders until the board outline, its
+mounting holes and the touch wire layout are final. The cable opening is
+sized for a USB-C plug on J1.
+
+### Part primitives and expressions, no sketches
+
+Every solid is a Part workbench primitive whose sizes and placement are
+spreadsheet expressions. Rounded rectangles are a Plane shrunk by the corner
+radius on each side, grown back by an Offset2D with arc joins, then
+extruded. Nothing references a face or edge by name and there is no sketch
+solver, so value changes cannot break topology references.
+
+Offset2D fails at a radius of zero, so the derived inner radii clamp to
+`r_min` (0.1 mm). When `corner_r` is at most `wall`, the cavity corners come
+out nearly sharp; the wall is thicker there, never thinner.
+
+### Fit rules the build enforces
+
+`box.check` rejects values that build a solid but give a box that does not
+work: the lid lip reaching down to the PCB top (`lip_h` must stay below
+`above_pcb`), the cable opening running into the floor or behind the lip,
+the touch dimple running past the cavity outline, a pilot hole as wide as
+its standoff, and `touch_skin` not thinner than `lid_t`. The lid is held only
+by the friction fit of its lip (`fit_gap` per side); there are no screws or
+snaps yet.
+
+### Touch wire against the lid
+
+Capacitive sensitivity falls off sharply with any air gap between the
+electrode and the cover, so the end of the J2 touch wire (or a foil pad on
+it) belongs flat against the lid underside, under the finger dimple. The
+dimple thins the lid from outside for the same reason: thinning from inside
+would leave a gap. Nothing holds the wire there yet; a clip or channel
+under the dimple waits for the wire and pad choice. The box has no opening
+for the external antenna on J3 either.
+
+### Tests run in FreeCAD's Python
+
+The enclosure scripts need FreeCAD's own modules, so they run under
+`freecadcmd` with the Python bundled in FreeCAD, not the pixi environment,
+and use `unittest` because that Python has no pytest. The geometry tests
+derive expected sizes from params.toml, so they hold for the final values.
+
+### freecadcmd script quirks
+
+- A script file runs as a module named after the file, never as
+  `__main__`: an `if __name__ == "__main__":` block silently does nothing.
+- The script's folder is not on `sys.path`; `build.py` and `test_box.py`
+  insert it.
+- Buffered `sys.stdout` is dropped when the script calls `sys.exit`, so
+  flush first. The exit code does reach the shell.
+- `freecadcmd -c CODE` with further arguments opens the interactive
+  console instead of exiting, so scripts take settings from environment
+  variables (`BOX_PARAMS`, `BOX_OUT`).
+- OpenCASCADE's STEP writer and the document and mesh savers print
+  statistics and percent counters to file descriptor 1, partly through
+  libc's stdio buffer. `box.quiet_stdout` points fd 1 at /dev/null and calls
+  `fflush(NULL)` before restoring it; without the flush the counters appear
+  at exit.
+
+### FreeCAD location
+
+mise does not install FreeCAD. The `box:*` tasks call `$FREECADCMD`
+(headless) and `$FREECAD` (GUI), defaulting to `freecadcmd` and `freecad` on
+PATH. For an AppImage, set both in `mise.local.toml` (not committed); the
+AppImage runs a bundled tool when given its name as the first argument:
+
+```toml
+[env]
+FREECAD = "{{env.HOME}}/apps/FreeCAD.AppImage"
+FREECADCMD = "{{env.HOME}}/apps/FreeCAD.AppImage freecadcmd"
+```

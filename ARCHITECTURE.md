@@ -52,3 +52,42 @@ gantt
     Start at the PA10 rising edge      :t1, after d1, 1
     Capture on the comparator output   :t2, after c1, 1
 ```
+
+## Enclosure build
+
+```mermaid
+flowchart LR
+    params["enclosure/params.toml<br/>input dimensions"]
+    kicad["ptt-switch/<br/>KiCad PCB"]
+    script["enclosure/box.py<br/>run by build.py under freecadcmd"]
+    sheet["Params spreadsheet<br/>inputs + derived formulas"]
+    base["Base<br/>shell, standoffs, pilot holes, USB-C opening"]
+    lid["Lid<br/>plate, lip, touch dimple"]
+    pcb["Pcb<br/>stand-in for fit checks"]
+    out["enclosure/build/<br/>ptt-box.FCStd, STEP and STL per part"]
+
+    kicad -. "board size and holes, copied by hand" .-> params
+    params --> script
+    script --> sheet
+    sheet -- expressions --> base
+    sheet -- expressions --> lid
+    sheet -- expressions --> pcb
+    base --> out
+    lid --> out
+```
+
+## Enclosure section, bottom to top
+
+Z = 0 is the underside of the floor; the PCB is centered on the Z axis.
+
+```mermaid
+flowchart BT
+    floor["floor: 0 .. floor_t"]
+    standoff["standoffs: floor_t .. pcb_z<br/>pcb_z = floor_t + standoff_h"]
+    board["PCB: pcb_z .. pcb_top"]
+    air["above_pcb clearance: pcb_top .. base_h"]
+    lip["lid lip: base_h - lip_h .. base_h, inside the walls"]
+    plate["lid plate: base_h .. total_h"]
+    floor --> standoff --> board --> air --> plate
+    lip -. "hangs into" .-> air
+```

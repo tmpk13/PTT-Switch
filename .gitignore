@@ -41,3 +41,7 @@ erc.rpt
 __pycache__/
 .pytest_cache/
 .pixi/
+
+# FreeCAD backups, and per-machine mise settings (where FreeCAD is installed)
+*.FCBak
+mise.local.toml

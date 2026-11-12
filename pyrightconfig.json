@@ -1,4 +1,9 @@
 {
     "venvPath": ".pixi/envs",
-    "venv": "default"
+    "venv": "default",
+    "executionEnvironments": [
+        // enclosure/ imports FreeCAD, Part and MeshPart, which exist only
+        // inside FreeCAD's bundled Python.
+        { "root": "enclosure", "reportMissingImports": "none" }
+    ]
 }

@@ -2,7 +2,8 @@
 pixi = "0.66.0"
 
 [tasks.test]
-description = "Check the CH572D symbol and footprint against the datasheet, and the netlist against the intended circuit"
+description = "Check the CH572D symbol and footprint against the datasheet, the netlist against the intended circuit, and the enclosure geometry"
+depends = ["box:test"]
 run = "pixi run pytest -q --tb=short tests"
 
 [tasks.erc]
@@ -12,3 +13,20 @@ run = [
     "cp -r ptt-switch/. build/erc/",
     "kicad-cli sch erc --severity-all --exit-code-violations -o build/erc.rpt build/erc/ptt-switch.kicad_sch",
 ]
+
+# FreeCAD is not installed by mise. FREECAD (GUI) and FREECADCMD (headless,
+# may be several words, e.g. "FreeCAD.AppImage freecadcmd") default to the
+# commands on PATH; set them in mise.local.toml where FreeCAD lives elsewhere.
+
+[tasks."box:build"]
+description = "Build the enclosure from enclosure/params.toml into enclosure/build (FCStd, STEP, STL)"
+run = "${FREECADCMD:-freecadcmd} enclosure/build.py"
+
+[tasks."box:test"]
+description = "Run the enclosure geometry tests under FreeCAD's Python"
+run = "${FREECADCMD:-freecadcmd} enclosure/test_box.py"
+
+[tasks."box:open"]
+description = "Build the enclosure, then open it in the FreeCAD GUI"
+depends = ["box:build"]
+run = "setsid -f ${FREECAD:-freecad} enclosure/build/ptt-box.FCStd >/dev/null 2>&1"
