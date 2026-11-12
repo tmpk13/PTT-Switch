@@ -45,3 +45,4 @@ __pycache__/
 # FreeCAD backups, and per-machine mise settings (where FreeCAD is installed)
 *.FCBak
 mise.local.toml
+ref/

@@ -4,7 +4,7 @@ What the ptt-switch board offers a phone over Bluetooth Low Energy: the
 board reports one thing, whether its touch wire is touched. This is the
 contract between the firmware (`firmware/`) and the Android app. A test
 in `firmware/src/protocol.rs` checks that the UUIDs below match the
-firmware's.
+firmware's, and `tests/test_android.py` that the app's match both.
 
 Status: the firmware builds and its logic is host-tested; nothing here has
 run on a board yet.

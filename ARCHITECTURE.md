@@ -159,3 +159,39 @@ gantt
     Alarm for the poll         :r1, 40, 1
     Alarm for the advertising  :r2, 85, 1
 ```
+
+## Android app
+
+`android/`, package `pttswitch.app`. Protocol: [docs/BLE.md](docs/BLE.md).
+
+```mermaid
+flowchart LR
+    board["board<br/>firmware/"]
+    subgraph app[pttswitch.app]
+        act["MainActivity<br/>permissions, Bluetooth on,<br/>touch pad and link line"]
+        link["Link<br/>scan, connect, subscribe"]
+        proto["Protocol<br/>UUIDs, touch value"]
+    end
+    board -- "advertising: service UUID,<br/>touch value" --> link
+    board -- "touch notifications" --> link
+    link -- "CCC write 01 00" --> board
+    link --> proto
+    link -- "onLinkState, onTouch" --> act
+    act -- "start on screen shown,<br/>stop on hidden" --> link
+```
+
+Link's states. Every state goes to OFF on `stop()`, when the screen is
+hidden; tapping the pad in OFF or FAILED starts again.
+
+```mermaid
+stateDiagram-v2
+    [*] --> SCANNING: start()
+    SCANNING --> CONNECTING: board found, advertised value shown
+    CONNECTING --> CONNECTED: notifications on
+    CONNECTING --> SCANNING: connection failed, rescan after 1 s
+    CONNECTED --> SCANNING: link dropped, rescan after 1 s
+    SCANNING --> FAILED: Bluetooth off, scan error
+    CONNECTING --> FAILED: no touch characteristic
+    CONNECTED --> FAILED: unknown touch value
+    FAILED --> SCANNING: tap
+```

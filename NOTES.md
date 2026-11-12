@@ -266,3 +266,36 @@ AppImage runs a bundled tool when given its name as the first argument:
 FREECAD = "{{env.HOME}}/apps/FreeCAD.AppImage"
 FREECADCMD = "{{env.HOME}}/apps/FreeCAD.AppImage freecadcmd"
 ```
+
+## Android app
+
+Plain Java in `android/`, built by `android/build.sh` with aapt2, javac,
+d8 and apksigner; no Gradle, no libraries, a 24 KB APK. Not yet run
+against a board.
+
+- **No Gradle**: the framework's BLE classes are all the app needs, and
+  the SDK's command-line tools build it in seconds with nothing to
+  download. Minimum Android 8 (API 26), compiled against android-33.
+- **Static nested classes only**: javac 21 gives the constructor of an
+  inner or anonymous class a nameless `MethodParameters` entry for the
+  outer instance, and d8 8.2 (build-tools 34) crashes on it. Callbacks
+  are static nested classes holding the outer object; lambdas are fine.
+- **Connect, not advertising alone**: the advertised touch value reaches
+  the app only as fast as Android delivers scan results, which it
+  throttles and batches; notifications follow a change within one or two
+  50 ms touch polls plus one connection interval. The app shows the advertised value only for the
+  moment between finding a board and its first notification.
+- **No `requestConnectionPriority(HIGH)`**: it would hold the board at a
+  7.5 to 15 ms interval with no peripheral latency, draining the cell;
+  the board's own 30 to 50 ms interval with latency 4 still delivers a
+  notification within one interval, since latency only lets an idle
+  board skip events.
+- **Rescan pause**: after a dropped link the app scans again after 1 s.
+  Android refuses a sixth scan start within 30 s and then returns no
+  results for a while, so a board that drops at once must not be retried
+  in a tight loop.
+- **First board wins**: the app connects to the first board it finds;
+  choosing among several, and following the wire in the background
+  (a foreground service), are not built yet.
+- Android 11 and older also need the system Location switch on for BLE
+  scans to return anything; the app does not check it.
