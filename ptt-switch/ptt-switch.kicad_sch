@@ -2359,6 +2359,12 @@
 		(uuid "9c751cff-1700-5e6a-b59d-dafd2c329788")
 	)
 	(junction
+		(at 113.03 114.3)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "dca2a90b-2ac6-4ec1-8b78-e585133ee0d8")
+	)
+	(junction
 		(at 160.02 101.6)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2387,14 +2393,6 @@
 	(no_connect
 		(at 140.97 106.68)
 		(uuid "d0099029-c46d-42bd-90c5-8e6c947b1c99")
-	)
-	(no_connect
-		(at 113.03 114.3)
-		(uuid "d2bb0af9-bb63-52c7-9758-828ba0f745e5")
-	)
-	(no_connect
-		(at 113.03 111.76)
-		(uuid "f6ff6382-47dc-5a89-9542-90a199eb02e6")
 	)
 	(no_connect
 		(at 140.97 104.14)
@@ -2499,6 +2497,16 @@
 			(type default)
 		)
 		(uuid "2fdeccff-09f3-5677-9220-89309513e6ea")
+	)
+	(wire
+		(pts
+			(xy 113.03 111.76) (xy 113.03 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30e048ab-fb74-45d7-9c20-0adab676b16e")
 	)
 	(wire
 		(pts
@@ -4061,6 +4069,82 @@
 			(project "ptt-switch"
 				(path "/dfc30a88-5d62-4db0-b683-1e6bebf92479"
 					(reference "R6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 113.03 114.3 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "d6502760-8d96-444c-8623-2f10f374f869")
+		(property "Reference" "#PWR013"
+			(at 113.03 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 113.03 118.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 113.03 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 113.03 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 113.03 114.3 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "21deafe3-ddfd-4432-b431-deac1145198e")
+		)
+		(instances
+			(project "ptt-switch"
+				(path "/dfc30a88-5d62-4db0-b683-1e6bebf92479"
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
