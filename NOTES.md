@@ -68,7 +68,15 @@
   them out for a WCH-LinkE: 1 +3V3, 2 SWDIO, 3 SWCLK, 4 GND.
 - J4 is the only way into the chip: firmware must leave the debug
   interface enabled, since disabling it frees PA0/PA1 as GPIO but locks
-  out the programmer.
+  out the programmer. (WCH's BLE examples disable it at start; this
+  firmware does not.)
+- A chip in Sleep does not answer the probe, and the firmware sleeps
+  between polls. It stays awake for 5 s after every reset (D2 lit), so:
+  power-cycle the board, then `mise run fw:flash` within those 5 s. If
+  that window is missed with the WCH-LinkE powering the board (cell
+  unplugged), `wlink --chip CH572 erase --method power-off` cuts the
+  probe's 3.3 V and erases on the way back up. wlink cannot detect the
+  CH57x family, hence `--chip`.
 
 ## Touch wire
 
@@ -110,6 +118,70 @@
   is a straight connection, and values go in only if measuring the built
   board with the final antenna and enclosure asks for them.
 - The antenna is J3, a U.FL connector for an external 2.4 GHz antenna.
+
+## Firmware
+
+Rust in `firmware/`, started from
+[ch572-bridge-rs](https://github.com/tmpk13/ch572-bridge-rs) (startup,
+clock setup, the WCH BLE bindings). Its BLE build never ran on hardware,
+and this firmware has not either: everything below is from WCH's EVT
+(github.com/openwch/ch570, commit 1e34c94) and the datasheet, checked by
+host tests and the disassembly only. The app-facing protocol is
+[docs/BLE.md](docs/BLE.md).
+
+- BLE needs WCH's closed-source stack (`libCH572BLE_PERI.a`): the
+  datasheet documents no radio registers. `mise run fw:wch` downloads it
+  and `libISP572.a` (for the MAC read) from the pinned commit, SHA-256
+  checked; they are not committed.
+- Sleep follows WCH's HAL_SLEEP path (EVT `BLE/HAL/SLEEP.c`,
+  `CH57x_pwr.c` LowPower_Sleep): TMOS calls the idle callback with the RTC
+  time of its next event, the firmware sets the RTC alarm 1.6 ms earlier
+  (crystal restart) and enters Sleep keeping RAM, core and radio
+  configuration, about 1.2 uA by datasheet table 5-3. The wake-up arithmetic
+  across the RTC's daily wrap is in `sleep.rs`, tested.
+- Sleep powers flash down, so whatever runs around it lives in RAM: the
+  vector table (the RTC interrupt is taken on the way out of the WFI), the
+  RTC handler, the sleep entry, the main loop, TMOS_SystemProcess and the
+  library's `.highcode_lp` section (tmos_idle and the radio re-init).
+  WCH's link script leaves `.highcode_lp` unplaced; RAM is the safe side.
+  The disassembly shows the firmware's RAM functions call nothing in
+  flash. RAM: 5.2 KB of code, 4.9 KB of .bss (3.5 KB of it the BLE heap),
+  2.1 KB of stack; the diagnostics characteristic reports how much stack
+  stayed unused.
+- Unique ID: the factory MAC address in the info area (0x3F018). On this
+  chip WCH's GET_UNIQUE_ID is that MAC plus a 16-bit sum of it, which is
+  the datasheet's 8-byte unique ID (section 4.5). It is the BLE public
+  address, the device ID characteristic and the `PTT-xxxxxx` name. A blank
+  MAC (all 0 or all FF) stops the firmware with D2 blinking once per
+  cycle; uniqueness across chips rests on WCH's factory programming.
+- Touch measurement (`hw::measure_touch`): the timer runs in capture mode,
+  edge to edge, with RB_CMP_CAP feeding it the comparator; counting
+  starts one store before PA10 rises, and the first FIFO entry is taken as
+  the charge time. That the first entry counts from the start of counting
+  is inferred from the datasheet's timeout behavior (8.3.3), not stated.
+  If it is wrong, charges time out while the comparator reads high, which
+  sets the capture-fault flag in the diagnostics; the fallback is polling
+  the comparator's live output (RB_APR_OUT_CMP) against SysTick at about
+  50 ns resolution. The comparator's settling time after enable (10 us
+  allowed) is a guess too.
+- Discharge between samples lasts 25 charge times (7 RC), so each sample
+  starts from the same residual voltage whatever the wire's capacitance.
+- Detector constants in `touch.rs` (threshold 1/16 of the baseline, at
+  least 30 counts; two polls to press and to release; 2 minute stuck
+  limit) are starting points: tune them on the built board with the
+  diagnostics characteristic in nRF Connect.
+- Crystal load RB_XT32M_C_LOAD = 110b (18 pF), as WCH's evaluation board
+  without external load capacitors uses; the radio carrier depends on it,
+  so measure the offset on the built board.
+- Power, untested: the touch poll and the advertising event are separate
+  wakes 200 ms apart each, and each wake pays the crystal restart. Folding
+  the poll into the advertising event would halve the wakes when idle.
+  Fsys stays at WCH's BLE example clock (PLL 100 MHz); a lower clock
+  would cut the awake current but is untried with the library. D1 is lit
+  for the length of every press.
+- No pairing or bonding: any phone in range can read the switch. Bonds
+  would need the library's SNV storage in flash (WCH puts it at 0x3B000,
+  which link.x would have to leave out of FLASH).
 
 ## Enclosure
 

@@ -1,0 +1,10 @@
+# The CH572 core is a QingKe V3C (RV32IMBC, no atomics), so the plain imc
+# target applies.  Setting build.target means host tests need an explicit
+# --target (mise run fw:test passes the host triple).
+[build]
+target = "riscv32imc-unknown-none-elf"
+
+# Flash through a WCH-LinkE on the SWD header J4.  wlink cannot detect
+# the CH57x family by itself, so the chip is named.
+[target.riscv32imc-unknown-none-elf]
+runner = "wlink --chip CH572 flash"

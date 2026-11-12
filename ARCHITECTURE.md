@@ -93,3 +93,69 @@ flowchart BT
     floor --> standoff --> board --> air --> plate
     lip -. "hangs into" .-> air
 ```
+
+## Firmware
+
+One TMOS task (WCH's BLE scheduler) carries the firmware; the BLE
+library's interrupts and the RTC wake-up feed it. Protocol:
+[docs/BLE.md](docs/BLE.md).
+
+```mermaid
+flowchart LR
+    subgraph flash[flash]
+        main[main.rs<br/>startup, MAC read]
+        task[ble.rs task events<br/>poll, notify, calibrate,<br/>param update, boot done]
+        cbs[GATT read/write,<br/>GAP state callbacks]
+        idle[ble::idle<br/>sleep::plan]
+        meas[hw::measure_touch]
+        det[touch::Detector]
+        proto[protocol<br/>UUIDs, payloads]
+    end
+    subgraph ram[RAM, flash is off in Sleep]
+        loop[ble::run<br/>TMOS_SystemProcess]
+        vec[vector table, rtc_irq]
+        sleepnow[hw::sleep_now]
+        lib[BLE library<br/>IRQ handlers, tmos_idle]
+    end
+    subgraph chip[CH572D peripherals]
+        rtc[RTC on LSI]
+        tmr[timer capture]
+        cmp[comparator]
+        radio[radio]
+    end
+
+    main --> loop
+    loop --> task
+    loop --> cbs
+    loop --> lib --> idle --> sleepnow
+    rtc -- alarm IRQ --> vec
+    task --> meas --> det
+    meas --> tmr
+    meas --> cmp
+    det --> task
+    task -- notify, advertising --> proto
+    lib --- radio
+```
+
+## Not connected: one 200 ms cycle
+
+The touch poll and the advertising event are separate wakes; each wake
+starts 1.6 ms early for the crystal (`sleep::wake_lead`). Durations are
+not to scale.
+
+```mermaid
+gantt
+    dateFormat X
+    axisFormat %s
+    section Chip
+    Sleep                      :s1, 0, 40
+    Crystal restart            :w1, after s1, 3
+    Touch poll                 :p1, after w1, 2
+    Sleep                      :s2, after p1, 40
+    Crystal restart            :w2, after s2, 3
+    Advertising event          :a1, after w2, 4
+    Sleep                      :s3, after a1, 40
+    section RTC
+    Alarm for the poll         :r1, 40, 1
+    Alarm for the advertising  :r2, 85, 1
+```

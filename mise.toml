@@ -1,9 +1,12 @@
 [tools]
 pixi = "0.66.0"
+# Flashes the CH572D through a WCH-LinkE on J4; CH570/CH572 support
+# arrived in 0.1.3.
+"cargo:wlink" = "0.1.3"
 
 [tasks.test]
-description = "Check the CH572D symbol and footprint against the datasheet, the netlist against the intended circuit, and the enclosure geometry"
-depends = ["box:test"]
+description = "Check the CH572D symbol and footprint against the datasheet, the netlist against the intended circuit, the enclosure geometry, and the firmware logic"
+depends = ["box:test", "fw:test"]
 run = "pixi run pytest -q --tb=short tests"
 
 [tasks.erc]
@@ -30,3 +33,42 @@ run = "${FREECADCMD:-freecadcmd} enclosure/test_box.py"
 description = "Build the enclosure, then open it in the FreeCAD GUI"
 depends = ["box:build"]
 run = "setsid -f ${FREECAD:-freecad} enclosure/build/ptt-box.FCStd >/dev/null 2>&1"
+
+# Firmware (firmware/, Rust for the CH572D).  WCH's closed-source BLE and
+# ISP libraries are downloaded, not committed.
+
+[tasks."fw:wch"]
+description = "Download WCH's closed-source CH572 BLE and ISP libraries into firmware/wch/ (pinned EVT commit, SHA-256 checked)"
+dir = "firmware"
+run = '''
+base=https://raw.githubusercontent.com/openwch/ch570/1e34c9450cd6df390153952c097cd09dd8a91aed/EVT/EXAM
+mkdir -p wch
+fetch() {
+    out="wch/$(basename "$1")"
+    if [ -f "$out" ] && echo "$2  $out" | sha256sum -c --quiet - 2>/dev/null; then
+        return
+    fi
+    curl -fsSL -o "$out.part" "$base/$1"
+    echo "$2  $out.part" | sha256sum -c --quiet -
+    mv "$out.part" "$out"
+}
+fetch BLE/LIB/libCH572BLE_PERI.a 36b6a9acd5f21c4994d6051c8767e77c3509bd633bbee66b323ee701e8bb7ae5
+fetch SRC/StdPeriphDriver/libISP572.a e6b1ab4402c69aba3f11de97fef0cf7b9d4e01394edac853085c7078fde26a5a
+'''
+
+[tasks."fw:build"]
+description = "Build the firmware (release) without flashing"
+depends = ["fw:wch"]
+dir = "firmware"
+run = "cargo build --release"
+
+[tasks."fw:flash"]
+description = "Build the firmware and flash it through a WCH-LinkE on J4 (within 5 s of power-up, see NOTES.md)"
+depends = ["fw:wch"]
+dir = "firmware"
+run = "cargo run --release"
+
+[tasks."fw:test"]
+description = "Run the firmware's host tests: touch detection, sleep timing, BLE payloads"
+dir = "firmware"
+run = 'cargo test -q --lib --target "$(rustc -vV | sed -n "s/^host: //p")"'
