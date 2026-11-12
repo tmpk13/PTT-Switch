@@ -1,0 +1,14 @@
+[tools]
+pixi = "0.66.0"
+
+[tasks.test]
+description = "Check the CH572D symbol and footprint against the datasheet, and the netlist against the intended circuit"
+run = "pixi run pytest -q --tb=short tests"
+
+[tasks.erc]
+description = "Run KiCad ERC on a copy of the schematic (kicad-cli can rewrite what it reads); report in build/erc.rpt"
+run = [
+    "rm -rf build/erc && mkdir -p build/erc",
+    "cp -r ptt-switch/. build/erc/",
+    "kicad-cli sch erc --severity-all --exit-code-violations -o build/erc.rpt build/erc/ptt-switch.kicad_sch",
+]

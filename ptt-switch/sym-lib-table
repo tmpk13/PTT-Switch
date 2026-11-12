@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "CH572D") (type "KiCad") (uri "${KIPRJMOD}/lib/CH572D.kicad_sym") (options "") (descr "WCH CH572D BLE MCU"))
+)
